@@ -122,7 +122,7 @@ Note: The implementation follows instruction from the [Udacity Self-driving car 
 ## Result
 * The code compiles successfully.
 * The vehicle drives at least 4.32 mile (a full loop) without incident.
-![Screen Shot](/image/Screenshot)
+![Screen Shot](/image/Screenshot.png)
 * The vehicle drives with a desired speed of 49.5 mph.
 * No Max Acceleartion and Jerk are exceeded.
 * No collision.
