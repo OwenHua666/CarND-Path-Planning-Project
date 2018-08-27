@@ -42,8 +42,6 @@ struct Vehicle
 {
   double s;
   double d;
-  double vx;
-  double vy;
   double speed;
 };
 
@@ -176,6 +174,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 
 }
 
+
 int main() {
   uWS::Hub h;
 
@@ -186,7 +185,7 @@ int main() {
   vector<double> map_waypoints_dx;
   vector<double> map_waypoints_dy;
 
-  // Waypoint map to read from
+  // Waypoint map to read from8
   string map_file_ = "../data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
@@ -266,17 +265,13 @@ int main() {
             }
 
             bool too_close = false;
-            bool lane_change = false;
-            bool left_lane_clear = false;
-            bool right_lane_clear = false;
-            bool pre_left_lane_change = false;
-            bool pre_right_lane_change = false;
             bool left_lane_change = false;
             bool right_lane_change = false;
             
             vector<Vehicle> left_lane_vehicles;
             vector<Vehicle> middle_lane_vehicles;
             vector<Vehicle> right_lane_vehicles;
+
 
             //find ref_v to use
             for (int i=0; i<sensor_fusion.size(); i++)
@@ -290,7 +285,7 @@ int main() {
 
               check_car_s += ((double)prev_size*.02*check_car_speed); //see the car's position in the future
 
-              Vehicle check_car{check_car_s, check_car_d, check_car_vx, check_car_vy, check_car_speed};
+              Vehicle check_car{check_car_s, check_car_d, check_car_speed};
 
               // push vehicle to the corresponding vehicle vectors
               if (check_car.d > 0 && check_car.d <= 4){left_lane_vehicles.push_back(check_car);}
@@ -308,7 +303,7 @@ int main() {
                 }
               }
             }
-
+            // Save vehicle vectors to a hashtable for eash of use
             map<int, vector<Vehicle>> lane_vehicles;
             lane_vehicles[0] = left_lane_vehicles;
             lane_vehicles[1] = middle_lane_vehicles;
@@ -325,6 +320,7 @@ int main() {
               int right_lane = lane + 1;
               double dist1, dist2;
 
+              // check left lane
               if (left_lane >= 0)
               {
                 // find vehicle 1 and 2 in this lane
@@ -361,7 +357,7 @@ int main() {
                 }
 
                 // Check whether there is enough gap to make the lane change
-                cout << "left_lane_vehicle1:" << dist1 << " left_lane_vehicle2:" << dist2 << endl;
+                // cout << "left_lane_vehicle1:" << dist1 << " left_lane_vehicle2:" << dist2 << endl;
                 if (((vL1.speed < car_speed && dist1 > 10.0) || dist1 > 30) && (( vL2.speed > car_speed && dist2 < 10) || (dist2 > 30.0)))
                 {
                   left_lane_change = true;
@@ -396,7 +392,7 @@ int main() {
                 }
 
                 // Check whether there is enough gap to make the lane change
-                cout << "right_lane_vehicle1:" << dist1 << " right_lane_vehicle2:" << dist2 << endl;
+                // cout << "right_lane_vehicle1:" << dist1 << " right_lane_vehicle2:" << dist2 << endl;
                 if (((vR1.speed < car_speed && dist1 > 10.0) || dist1 > 30) && (( vR2.speed > car_speed && dist2 < 10) || (dist2 > 30.0)))
                 {
                   right_lane_change = true;

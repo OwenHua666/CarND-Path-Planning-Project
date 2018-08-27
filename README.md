@@ -5,7 +5,7 @@ Self-Driving Car Engineer Nanodegree Program
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).
 
 ### Goals
-In this project your goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 10 m/s^3.
+In this project my goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. I am provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 10 m/s^3.
 
 #### The map of the highway is in data/highway_map.txt
 Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
@@ -15,9 +15,8 @@ The highway's waypoints loop around so the frenet s value, distance along the ro
 ## Basic Build Instructions
 
 1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./path_planning`.
+2. Compile if you changed anything in the folder "build"
+3. Run it: `./path_planning`.
 
 Here is the data provided from the Simulator to the C++ Program
 
@@ -60,11 +59,6 @@ the path has processed since last time.
 
 2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
 
-## Tips
-
-A really helpful resource for doing this project and creating smooth trajectories was using http://kluge.in-chemnitz.de/opensource/spline/, the spline function is in a single hearder file is really easy to use.
-
----
 
 ## Dependencies
 
@@ -100,41 +94,40 @@ using the following settings:
 
 Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
 
-## Project Instructions and Rubric
+## Code Implementation
+### Pre-setup
+* I create a struct called Vehicle to wrap vehicle information inside. In my path planner, I only used frenet s, d, and speed. (line 41 - 46)
+### Desired Speed
+* I set the desired speed to 49.5
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+### Implementation Detail
+Note: The implementation follows instruction from the [Udacity Self-driving car Q&A session.](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/27800789-bc8e-4adc-afe0-ec781e82ceae/lessons/23add5c6-7004-47ad-b169-49a5d7b1c1cb/concepts/3bdfeb8c-8dd6-49a7-9d08-beff6703792d).
+
+* I set vehicle initial lane to lane 1 and reference speed to 0.0 mph to solve the inial jerk and high acceleration. (line 216 - 220)
+
+* I kept all the planning state to the most future. For car_s, it will equal to the last point in the previous path it the path exits. For other vechiles on road, they are estimated by plusing the moved distance to their current position assuming they don't change lane in the near future.
+
+* I seperated vehicles on road into their corresponding lanes and save them in the 3 vectors (3 lanes). I alse checked whether a vehicle is too close in this section. (line 277 - 305)
+
+* If there is a vehicle close, I checked whether the neighboring lanes are clear. The criteria includes 1) Whether the lane is within the road (0<=lane<=2); 2) The gap in the lane; and 3) The vehicle speed in the lane. Note, the vehicle would prefer change to the left lane to pass the front vehicle. It slows down if both neighboring lanes are not clear. (line 313 - 409)
+
+* To generate smooth path, I used the spline library [spline.h](http://kluge.in-chemnitz.de/opensource/spline/)
+
+* I used five points to generate the spline. The first two points are tangent to car's yaw. Then, the other three points are spaced 30 meters evenly. (line 419 - 463)
+ 
+* I firstly change the coordinate system to vehicle-centered one for ease of calculation. Then, I changed it back. (line 465 - 474 and line 507 - 512)
+
+* I generated 50 points for the path every time step. To avoid jerk and discontinuity, I purposely included the left points from the previous path and filled up the path container upto 50 points. The newly added points are spaced evenly based on the reference speed and target distance. (line 483 - 515)
+
+## Result
+* The code compiles successfully.
+* The vehicle drives at least 4.32 mile (a full loop) without incident.
+![Screen Shot](/image/Screenshot)
+* The vehicle drives with a desired speed of 49.5 mph.
+* No Max Acceleartion and Jerk are exceeded.
+* No collision.
+* Lane following is good.
+* The change lane function works as expected.
 
 
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
 
